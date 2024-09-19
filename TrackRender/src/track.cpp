@@ -385,7 +385,10 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 				mat.entries[8]*=-1;
 			}
 
-			if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BRAKE || (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_MAGNETIC_BRAKE || (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE || (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BOOSTER)
+			if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BRAKE ||
+				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_MAGNETIC_BRAKE ||
+				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE ||
+				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BOOSTER)
 			{
 			float special_length=track_type->brake_length;
 				if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE)special_length=TILE_SIZE;
@@ -525,57 +528,77 @@ int offset_table_index(track_point_t track)
 y        z
 |      -
 |   -
-|_
+|______ z
+
+{z,y,z,y,z,y,z,y}
 */
 
 /*
 float offset_tables[10][8]={
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},//Gentle 1
-    {0,0,0,0,0,0,0,0},//Steep 2
+	{0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0},//Gentle 1
+	{0,0,0,0,0,0,0,0},//Steep 2
 
-    {1,-1.5,-1,-1.5,1,0,-1,0},//Bank
-    {0,0,0,0,0,0,0,0},//Gentle Bank 4
+	{1,-1.5,-1,-1.5,1,0,-1,0},//Bank
+	{0,0,0,0,0,0,0,0},//Gentle Bank 4
 
-    {0,0,0,0,0,0,0,0},//Inverted 5
-    {0,0,0,0,0,0,0,0},//Diagonal 6
+	{0,0,0,0,0,0,0,0},//Inverted 5
+	{0,0,0,0,0,0,0,0},//Diagonal 6
 
-    {0,0,0,0,0,0,0,0},//Diagonal Bank 7
+	{0,0,0,0,0,0,0,0},//Diagonal Bank 7
 
-    {0,0,0,0,0,0,0,0},//Diagonal gentle 8
-    {0,0,0,0,0,0,0,0},//Other
-    };
+	{0,0,0,0,0,0,0,0},//Diagonal gentle 8
+	{0,0,0,0,0,0,0,0},//Other
+	};
 */
 
 //Giga
 /*
 float offset_tables[10][8]={
-    {0,-1,0,-1.5,0,-1,0,-1.5},
-    {0,-1,0,-2,0,-2,0,-1},            //Gentle
-    {1,-0.5,1,-0.5,0.5,-1,1,-0.5},    //Steep
-    {0,-2,-1,-1.5,1,0,-1,0},          //Bank
-    {0.75,-2,-0.75,-2,1,-0.5,0,-0.5}, //Gentle Bank   -0.5,-1    0.5,0
-    {0,0,0,0,0,0,0,0},                //Inverted
-    {0,-1.25,0,-1.25,0,-1.25,0,-1.25},//Diagonal
-    {0,-1.75,-1,-0.25,0,-0.25,-1,-1.5},//Diagonal Bank
-    {0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal gentle
-    {0,0,0,0,0,0,0,0},                //Other
+	{0,-1,0,-1.5,0,-1,0,-1.5},
+	{0,-1,0,-2,0,-2,0,-1},            //Gentle
+	{1,-0.5,1,-0.5,0.5,-1,1,-0.5},    //Steep
+	{0,-2,-1,-1.5,1,0,-1,0},          //Bank
+	{0.75,-2,-0.75,-2,1,-0.5,0,-0.5}, //Gentle Bank   -0.5,-1    0.5,0
+	{0,0,0,0,0,0,0,0},                //Inverted
+	{0,-1.25,0,-1.25,0,-1.25,0,-1.25},//Diagonal
+	{0,-1.75,-1,-0.25,0,-0.25,-1,-1.5},//Diagonal Bank
+	{0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal gentle
+	{0,0,0,0,0,0,0,0},                //Other
+
 };
 */
 
-//Mini
-float offset_tables[10][8]={
-    {0,-1.45,0,-1.45,0,-1.45,0,-1.45},
-    {0,-1,0,-1.25,0,-1.25,0,-1},            //Gentle
-    {1,-0.5,1,-0.5,0.5,-1,1,-0.5},    //Steep
-    {0,-2,-1,-1.5,1,0,-1,0},          //Bank
-    {0.75,-2,-0.75,-2,1,-0.5,-0.5,-0.4}, //Gentle Bank   -0.5,-1    0.5,0
-    {0,0,0,0,0,0,0,0},                //Inverted
-    {0,-1.25,0,-1.25,0,-1.25,0,-1.25},//Diagonal
-    {0,-1.75,-1,-0.25,0,-0.25,-1,-1.5},//Diagonal Bank
-    {0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal gentle
-    {0,0,0,0,0,0,0,0},                //Other
+//BM 
+
+float offset_tables[10][8] = {
+	{0,-1,0,-1.5,0,-1,0,-1.5},		  //Flat
+	{0,-1,0,-2,0,-2,0,-1},            //Gentle
+	{1,0,1,-0.5,0.5,-1,1,-0.5},    //Steep
+	{0,-2,-1,-1.5,1,0,-1,0},          //Bank
+	{0.75,-2,-0.75,-2,2,1,-2,0.75}, //Gentle Bank   -0.5,-1   !2,1,-2,0.75!
+	{0,0,0,0,0,0,0,0},                //Inverted
+	{0,-1.25,0,-1.25,0,-1.25,0,-1.25},//Diagonal
+	{0,-1.25,-1,-0.25,1,1,-1,-0.5},//Diagonal Bank
+	{0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal gentle
+	{0,0,0,0,0,0,0,0},                //Other
 };
+/*
+
+//Mini
+float offset_tables[10][8] = {
+	{0,-1.45,0,-1.45,0,-1.45,0,-1.45},
+	{0,-1,0,-1.25,0,-1.25,0,-1},            //Gentle
+	{1,-0.5,1,-0.5,0.5,-1,1,-0.5},    //Steep
+	{0,-2,-1,-1.5,1,0,-1,0},          //Bank
+	{0.75,-2,-0.75,-2,1,-0.5,-0.5,-0.4}, //Gentle Bank   -0.5,-1    0.5,0
+	{0,0,0,0,0,0,0,0},                //Inverted
+	{0,-1.25,0,-1.25,0,-1.25,0,-1.25},//Diagonal
+	{0,-1.75,-1,-0.25,0,-0.25,-1,-1.5},//Diagonal Bank
+	{0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal gentle
+	{0,0,0,0,0,0,0,0},                //Other
+	};
+	*/
 
 
 
