@@ -861,14 +861,15 @@ uint64_t groups=0;
 	write_track_section(context,&(track_list.brake),track_type,base_dir,output_path,sprites,subtype,NULL);
 	}
 
-	//Block Brakes
+	//Block Brakes Unanimated Sprites
 
-	if(groups&TRACK_GROUP_BLOCK_BRAKES)
+	if(groups&TRACK_GROUP_BLOCK_BRAKES_CLASSIC)
 	{
 	sprintf(output_path,"%.255sblock_brake%s",output_dir,suffix);
 	write_track_section(context,&(track_list.block_brake_classic),track_type,base_dir,output_path,sprites,subtype,NULL);
 	}
-
+	
+	//Block Brakes Animated Sprites
 
 	if (groups & TRACK_GROUP_BLOCK_BRAKES_OPEN)
 	{
@@ -880,6 +881,30 @@ uint64_t groups=0;
 		sprintf(output_path, "%.255sblock_brake_sw_ne_closed%s", output_dir, suffix);
 		write_track_section(context, &(track_list.block_brake_closed), track_type, base_dir, output_path, sprites, subtype, NULL);
 	}
+
+	//diagonal Block Brakes Animated Sprites
+	
+	if (groups & TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_OPEN)
+	{
+		sprintf(output_path, "%.255sblockbrake_horizontal_open%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_horizontal_block_brake_open), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	{
+		sprintf(output_path, "%.255sblockbrake_vertical_open%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_vertical_block_brake_open), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	if (groups & TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_CLOSED)
+	{
+		sprintf(output_path, "%.255sblockbrake_horizontal_closed%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_horizontal_block_brake_closed), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	{
+		sprintf(output_path, "%.255sblockbrake_vertical_closed%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_vertical_block_brake_closed), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	
+
+	// Inciclined Brakes
 
 	if(groups&TRACK_GROUP_SLOPED_BRAKES)
 	{
@@ -966,6 +991,8 @@ uint64_t groups=0;
 	sprintf(output_path,"%.255sflat_diag%s",output_dir,suffix);
 	write_track_section(context,&(track_list.flat_diag),track_type,base_dir,output_path,sprites,subtype,subtype ==TRACK_SUBTYPE_LIFT ? flat_diag_chain : NULL);
 	}
+
+	//diagonal Brakes
 	if(groups&TRACK_GROUP_DIAGONAL_BRAKES)
 	{
 		if(groups&TRACK_GROUP_BRAKES)
@@ -973,11 +1000,7 @@ uint64_t groups=0;
 		sprintf(output_path,"%.255sbrake_diag%s",output_dir,suffix);
 		write_track_section(context,&(track_list.brake_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
 		}
-		if(groups&TRACK_GROUP_BLOCK_BRAKES)
-		{
-		sprintf(output_path,"%.255sblock_brake_diag%s",output_dir,suffix);
-		write_track_section(context,&(track_list.block_brake_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
-		}
+		
 		if(groups&TRACK_GROUP_MAGNETIC_BRAKES)
 		{
 		sprintf(output_path,"%.255smagnetic_brake_diag%s",output_dir,suffix);
@@ -1005,6 +1028,7 @@ uint64_t groups=0;
 		sprintf(output_path,"%.255smagnetic_brake_gentle_diag%s",output_dir,suffix);
 		write_track_section(context,&(track_list.magnetic_brake_gentle_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
 		}
+
 	};
 	if((groups&TRACK_GROUP_DIAGONALS)&&(groups&TRACK_GROUP_STEEP_SLOPES))
 	{

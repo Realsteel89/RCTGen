@@ -130,11 +130,13 @@ enum track_groups : uint64_t
 	TRACK_GROUP_MAGNETIC_BRAKES = 0x200000000,
 	TRACK_GROUP_DIAGONAL_VERTICALS = 0x400000000,
 	TRACK_GROUP_BANKED_S_BENDS = 0x800000000,
-	TRACK_GROUP_BLOCK_BRAKES = 0x1000000000,
+	TRACK_GROUP_BLOCK_BRAKES_CLASSIC = 0x1000000000,
 	TRACK_GROUP_BLOCK_BRAKES_OPEN = 0x2000000000,
 	TRACK_GROUP_BLOCK_BRAKES_CLOSED = 0x4000000000,
-	
+	TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_OPEN = 0x8000000000, 
+	TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_CLOSED = 0x10000000000
 };
+
 
 
 enum models
@@ -240,7 +242,10 @@ typedef struct
 	track_section_t block_brake_classic;
 	track_section_t block_brake_open;
 	track_section_t block_brake_closed;
-	track_section_t block_brake_diag;
+	track_section_t block_brake_diagonal_horizontal_block_brake_open;
+	track_section_t block_brake_diagonal_vertical_block_brake_open;
+	track_section_t block_brake_diagonal_horizontal_block_brake_closed;
+	track_section_t block_brake_diagonal_vertical_block_brake_closed;
 	track_section_t booster;
 	track_section_t flat_to_gentle_up;
 	track_section_t gentle_up_to_flat;

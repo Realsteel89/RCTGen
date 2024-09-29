@@ -54,10 +54,12 @@ int load_groups(json_t* json,uint64_t* out)
 		}
 		if(strcmp(json_string_value(group_name),"flat") ==0)groups|=TRACK_GROUP_FLAT;
 		else if(strcmp(json_string_value(group_name),"brakes") ==0)groups|=TRACK_GROUP_BRAKES;
-		else if(strcmp(json_string_value(group_name),"block_brakes_classic") ==0)groups|=TRACK_GROUP_BLOCK_BRAKES;
+		else if(strcmp(json_string_value(group_name),"block_brakes_classic") ==0)groups|=TRACK_GROUP_BLOCK_BRAKES_CLASSIC;
 		else if (strcmp(json_string_value(group_name),"block_brakes_open") == 0)groups |= TRACK_GROUP_BLOCK_BRAKES_OPEN;
 		else if (strcmp(json_string_value(group_name),"block_brakes_closed") == 0)groups |= TRACK_GROUP_BLOCK_BRAKES_CLOSED;
 		else if(strcmp(json_string_value(group_name),"diagonal_brakes") ==0)groups|=TRACK_GROUP_DIAGONAL_BRAKES;
+		else if (strcmp(json_string_value(group_name),"diagonal_block_brakes_open") == 0)groups |= TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_OPEN;
+		else if (strcmp(json_string_value(group_name),"diagonal_block_brakes_closed") == 0)groups |= TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_CLOSED;
 		else if(strcmp(json_string_value(group_name),"sloped_brakes") ==0)groups|=TRACK_GROUP_SLOPED_BRAKES;
 		else if(strcmp(json_string_value(group_name),"magnetic_brakes") ==0)groups|=TRACK_GROUP_MAGNETIC_BRAKES;
 		else if(strcmp(json_string_value(group_name),"turns") ==0)groups|=TRACK_GROUP_TURNS;
