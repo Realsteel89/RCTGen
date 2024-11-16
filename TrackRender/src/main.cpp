@@ -98,6 +98,25 @@ int load_groups(json_t* json,uint64_t* out)
 	return 0;
 }
 
+int load_offsets(const json_t* array, float* offsets) {
+	int size = json_array_size(array);
+	if (size != 8)
+	{
+		printf("Offsets must have 8 components\n");
+		return 1;
+	}
+	for (int i = 0; i < 8; i++) {
+		json_t* offset = json_array_get(array, i);
+		if (!json_is_number(offset))
+		{
+			printf("Offsets components must be numeric\n");
+			return 1;
+		}
+		offsets[i] = json_number_value(offset);
+	}
+	return 0;
+}
+
 int load_track_type(track_type_t* track_type,json_t* json)
 {
 	//Load track flags
