@@ -178,8 +178,16 @@ int get_special_index(int flags)
 	case TRACK_SPECIAL_BRAKE:
 		return MODEL_SPECIAL_BRAKE;
 		break;
-	case TRACK_SPECIAL_BLOCK_BRAKE:
-		return MODEL_SPECIAL_BLOCK_BRAKE;
+	case TRACK_SPECIAL_BLOCK_BRAKE_CLASSIC:
+		return MODEL_SPECIAL_BLOCK_BRAKE_CLASSIC;
+		break;
+	case TRACK_SPECIAL_BLOCK_BRAKE_OPEN:
+		return MODEL_SPECIAL_BLOCK_BRAKE_OPEN;
+		break;
+	case TRACK_SPECIAL_BLOCK_BRAKE_CLOSED:
+		return MODEL_SPECIAL_BLOCK_BRAKE_CLOSED;
+		break;
+
 		break;
 	case TRACK_SPECIAL_MAGNETIC_BRAKE:
 		return MODEL_SPECIAL_MAGNETIC_BRAKE;
@@ -389,15 +397,19 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 			}
 
 			if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BRAKE ||
-				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_MAGNETIC_BRAKE ||
-				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE ||
-				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BOOSTER ||
-				(track_section->flags & TRACK_SPECIAL_MASK) == TRACK_SPECIAL_VERTICAL_BOOSTER ||
-				(track_section->flags & TRACK_SPECIAL_MASK) == TRACK_SPECIAL_LAUNCHED_LIFT ||
-				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_ROTATION_CONTROL_TOGGLE)
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_MAGNETIC_BRAKE ||
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_CLASSIC ||
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_OPEN ||
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_CLOSED ||
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_VERTICAL_BOOSTER ||
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_LAUNCHED_LIFT ||
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BOOSTER||
+			   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_ROTATION_CONTROL_TOGGLE)
 			{
 			float special_length=track_type->brake_length;
-				if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE)special_length=TILE_SIZE;
+				if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_CLASSIC ||
+			       (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_OPEN ||
+				   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_CLOSED)special_length=TILE_SIZE;
 
 			int num_special_meshes=(int)floor(0.5+track_section->length/special_length);
 			float special_scale=track_section->length/(num_special_meshes*special_length);
@@ -780,11 +792,52 @@ uint64_t groups=0;
 	sprintf(output_path,"%.255sbrake%s",output_dir,suffix);
 	write_track_section(context,&(track_list.brake),track_type,base_dir,output_path,sprites,subtype,NULL);
 	}
-	if(groups&TRACK_GROUP_BLOCK_BRAKES)
+
+	//Block Brakes Unanimated Sprites
+
+	if(groups&TRACK_GROUP_BLOCK_BRAKES_CLASSIC)
 	{
 	sprintf(output_path,"%.255sblock_brake%s",output_dir,suffix);
-	write_track_section(context,&(track_list.block_brake),track_type,base_dir,output_path,sprites,subtype,NULL);
+	write_track_section(context,&(track_list.block_brake_classic),track_type,base_dir,output_path,sprites,subtype,NULL);
 	}
+	
+	//Block Brakes Animated Sprites
+
+	if (groups & TRACK_GROUP_BLOCK_BRAKES_OPEN)
+	{
+		sprintf(output_path, "%.255sblock_brake_nw_se_open%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_open), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	if (groups & TRACK_GROUP_BLOCK_BRAKES_CLOSED)
+	{
+		sprintf(output_path, "%.255sblock_brake_sw_ne_closed%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_closed), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+
+	//diagonal Block Brakes Animated Sprites
+	
+	if (groups & TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_OPEN)
+	{
+		sprintf(output_path, "%.255sblockbrake_horizontal_open%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_horizontal_block_brake_open), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	{
+		sprintf(output_path, "%.255sblockbrake_vertical_open%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_vertical_block_brake_open), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	if (groups & TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_CLOSED)
+	{
+		sprintf(output_path, "%.255sblockbrake_horizontal_closed%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_horizontal_block_brake_closed), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	{
+		sprintf(output_path, "%.255sblockbrake_vertical_closed%s", output_dir, suffix);
+		write_track_section(context, &(track_list.block_brake_diagonal_vertical_block_brake_closed), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+	
+
+	// Inciclined Brakes
+
 	if(groups&TRACK_GROUP_SLOPED_BRAKES)
 	{
 	sprintf(output_path,"%.255sbrake_gentle%s",output_dir,suffix);
@@ -892,6 +945,8 @@ uint64_t groups=0;
 	sprintf(output_path,"%.255sflat_diag%s",output_dir,suffix);
 	write_track_section(context,&(track_list.flat_diag),track_type,base_dir,output_path,sprites,subtype,subtype ==TRACK_SUBTYPE_LIFT ? flat_diag_chain : NULL);
 	}
+
+	//diagonal Brakes
 	if(groups&TRACK_GROUP_DIAGONAL_BRAKES)
 	{
 		if(groups&TRACK_GROUP_BRAKES)
@@ -899,11 +954,7 @@ uint64_t groups=0;
 		sprintf(output_path,"%.255sbrake_diag%s",output_dir,suffix);
 		write_track_section(context,&(track_list.brake_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
 		}
-		if(groups&TRACK_GROUP_BLOCK_BRAKES)
-		{
-		sprintf(output_path,"%.255sblock_brake_diag%s",output_dir,suffix);
-		write_track_section(context,&(track_list.block_brake_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
-		}
+		
 		if(groups&TRACK_GROUP_MAGNETIC_BRAKES)
 		{
 		sprintf(output_path,"%.255smagnetic_brake_diag%s",output_dir,suffix);
@@ -931,6 +982,7 @@ uint64_t groups=0;
 		sprintf(output_path,"%.255smagnetic_brake_gentle_diag%s",output_dir,suffix);
 		write_track_section(context,&(track_list.magnetic_brake_gentle_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
 		}
+
 	};
 	if((groups&TRACK_GROUP_DIAGONALS)&&(groups&TRACK_GROUP_STEEP_SLOPES))
 	{

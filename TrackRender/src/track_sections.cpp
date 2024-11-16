@@ -9322,8 +9322,15 @@ const track_section_t magnetic_brake={TRACK_SPECIAL_MAGNETIC_BRAKE,flat_curve,FL
 const track_section_t magnetic_brake_diag={TRACK_SPECIAL_MAGNETIC_BRAKE|TRACK_DIAGONAL,flat_diag_curve,FLAT_DIAG_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}}};
 const track_section_t magnetic_brake_gentle={TRACK_SPECIAL_MAGNETIC_BRAKE,gentle_curve,GENTLE_LENGTH,{{0,1,NULL},{0,1,NULL},{0,1,NULL},{0,1,NULL}}};
 const track_section_t magnetic_brake_gentle_diag={TRACK_SPECIAL_MAGNETIC_BRAKE|TRACK_DIAGONAL|TRACK_EXTRUDE_BEHIND|TRACK_SUPPORT_BASE,gentle_diag_curve,GENTLE_DIAG_LENGTH,{{0,1,&diag_slope_mask},{0,1,&diag_slope_mask},{0,1,&diag_slope_mask},{0,1,&diag_slope_mask}}};
-const track_section_t block_brake={TRACK_SPECIAL_BLOCK_BRAKE,flat_curve,FLAT_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}}};
-const track_section_t block_brake_diag={TRACK_SPECIAL_BLOCK_BRAKE|TRACK_DIAGONAL,flat_diag_curve,FLAT_DIAG_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}}};
+const track_section_t block_brake_classic={TRACK_SPECIAL_BLOCK_BRAKE_CLASSIC,flat_curve,FLAT_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}}};
+const track_section_t block_brake_open = { TRACK_SPECIAL_BLOCK_BRAKE_OPEN,flat_curve,FLAT_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}} };
+const track_section_t block_brake_closed = { TRACK_SPECIAL_BLOCK_BRAKE_CLOSED,flat_curve,FLAT_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}} };
+
+const track_section_t block_brake_diagonal_horizontal_block_brake_open ={TRACK_SPECIAL_BLOCK_BRAKE_OPEN|TRACK_DIAGONAL,flat_diag_curve,FLAT_DIAG_LENGTH,{{0,1,NULL},{0,0,NULL},{0,0,NULL},{0,0,NULL}}};
+const track_section_t block_brake_diagonal_vertical_block_brake_open = { TRACK_SPECIAL_BLOCK_BRAKE_OPEN | TRACK_DIAGONAL,flat_diag_curve,FLAT_DIAG_LENGTH,{{0,0,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}} };
+const track_section_t block_brake_diagonal_horizontal_block_brake_closed = { TRACK_SPECIAL_BLOCK_BRAKE_CLOSED | TRACK_DIAGONAL,flat_diag_curve,FLAT_DIAG_LENGTH,{{0,1,NULL},{0,0,NULL},{0,0,NULL},{0,0,NULL}} };
+const track_section_t block_brake_diagonal_vertical_block_brake_closed = { TRACK_SPECIAL_BLOCK_BRAKE_CLOSED | TRACK_DIAGONAL,flat_diag_curve,FLAT_DIAG_LENGTH,{{0,0,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}} };
+
 const track_section_t booster={TRACK_SPECIAL_BOOSTER,flat_curve,FLAT_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}}};
 const track_section_t launched_lift={TRACK_SPECIAL_LAUNCHED_LIFT,gentle_curve,GENTLE_LENGTH,{{0,1,NULL},{0,1,NULL},{0,1,NULL},{0,1,NULL}}};
 const track_section_t flat_to_gentle_up={0,flat_to_gentle_up_curve,FLAT_TO_GENTLE_LENGTH,{{0,1,NULL},{0,1,NULL},{0,1,NULL},{0,1,NULL}}};
@@ -18293,7 +18300,7 @@ const track_section_t split_flat={0,flat_curve,FLAT_LENGTH,{{VIEW_NEEDS_TRACK_MA
 const track_section_t split_flat_asymmetric={
     0,flat_curve,FLAT_LENGTH,{{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks}}};
 const track_section_t split_brake={TRACK_SPECIAL_BRAKE,flat_curve,FLAT_LENGTH,{{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{0,0,NULL},{0,0,NULL}}};
-const track_section_t split_block_brake={TRACK_SPECIAL_BLOCK_BRAKE,flat_curve,FLAT_LENGTH,{{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{0,0,NULL},{0,0,NULL}}};
+const track_section_t split_block_brake={TRACK_SPECIAL_BLOCK_BRAKE_CLASSIC,flat_curve,FLAT_LENGTH,{{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{0,0,NULL},{0,0,NULL}}};
 const track_section_t split_booster={TRACK_SPECIAL_BOOSTER,flat_curve,FLAT_LENGTH,{{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{VIEW_NEEDS_TRACK_MASK,2,single_tile_split_masks},{0,0,NULL},{0,0,NULL}}};
 
 //Gentle
@@ -18874,6 +18881,14 @@ track_list_t track_list_default={
 	block_brake,
 	block_brake_diag,
 	booster,    
+	block_brake_classic,
+    block_brake_open,
+    block_brake_closed,
+    block_brake_diagonal_horizontal_block_brake_open,
+    block_brake_diagonal_vertical_block_brake_open,
+    block_brake_diagonal_horizontal_block_brake_closed,
+    block_brake_diagonal_vertical_block_brake_closed,
+	booster,
 	flat_to_gentle_up,
 	gentle_up_to_flat,
 	gentle,
@@ -19022,8 +19037,13 @@ track_list_t track_list_semi_split={
 	magnetic_brake_diag,
 	magnetic_brake_gentle,
 	magnetic_brake_gentle_diag,
-	block_brake,
-	block_brake_diag,
+	block_brake_classic,
+    block_brake_open,
+    block_brake_closed,
+    block_brake_diagonal_horizontal_block_brake_open,
+    block_brake_diagonal_vertical_block_brake_open,
+    block_brake_diagonal_horizontal_block_brake_closed,
+    block_brake_diagonal_vertical_block_brake_closed,
 	booster,
 	flat_to_gentle_up,
 	gentle_up_to_flat,
@@ -19173,7 +19193,10 @@ track_list_t track_list_split={
 	magnetic_brake_gentle,
 	magnetic_brake_gentle_diag,
 	split_block_brake,
-	block_brake_diag,
+    block_brake_diagonal_horizontal_block_brake_open,
+    block_brake_diagonal_vertical_block_brake_open,
+    block_brake_diagonal_horizontal_block_brake_closed,
+    block_brake_diagonal_vertical_block_brake_closed,
 	split_booster,
 	split_flat_to_gentle_up,
 	split_gentle_up_to_flat,
