@@ -9343,6 +9343,8 @@ const track_section_t steep_to_vertical_up={TRACK_VERTICAL|TRACK_NO_SUPPORTS|TRA
 const track_section_t vertical_to_steep_up={TRACK_VERTICAL|TRACK_NO_SUPPORTS|TRACK_SPECIAL_VERTICAL_TO_STEEP,vertical_to_steep_up_curve,STEEP_TO_VERTICAL_LENGTH,{{0,1,NULL},{0,1,NULL},{0,1,NULL},{0,1,NULL}}};
 const track_section_t vertical={TRACK_VERTICAL|TRACK_NO_SUPPORTS|TRACK_SPECIAL_VERTICAL,vertical_curve,VERTICAL_LENGTH,{{0,1,NULL},{0,1,NULL},{0,1,NULL},{0,1,NULL}}};
 const track_section_t vertical_booster={TRACK_VERTICAL|TRACK_NO_SUPPORTS|TRACK_SPECIAL_VERTICAL_BOOSTER,vertical_curve,VERTICAL_LENGTH,{{0,1,NULL},{0,1,NULL},{0,1,NULL},{0,1,NULL}}};
+const track_section_t rotation_control_toggle = { TRACK_SPECIAL_ROTATION_CONTROL_TOGGLE,flat_curve,FLAT_LENGTH,{{0,1,NULL},{0,1,NULL},{0,0,NULL},{0,0,NULL}} };
+
 
 
 
@@ -18871,7 +18873,7 @@ track_list_t track_list_default={
 	magnetic_brake_gentle_diag,
 	block_brake,
 	block_brake_diag,
-	booster,
+	booster,    
 	flat_to_gentle_up,
 	gentle_up_to_flat,
 	gentle,
@@ -19005,7 +19007,8 @@ track_list_t track_list_default={
 	vertical_twist_right_to_diag_up,
 	vertical_twist_left_to_orthogonal_up,
 	vertical_twist_right_to_orthogonal_up,
-	vertical_booster
+	vertical_booster,
+    rotation_control_toggle
 };
 
 track_list_t track_list_semi_split={

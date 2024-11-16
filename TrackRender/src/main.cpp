@@ -89,6 +89,7 @@ int load_groups(json_t* json,uint64_t* out)
 		else if(strcmp(json_string_value(group_name),"launched_lifts") ==0)groups|=TRACK_GROUP_LAUNCHED_LIFTS;
 		else if(strcmp(json_string_value(group_name),"turn_bank_transitions") ==0)groups|=TRACK_GROUP_TURN_BANK_TRANSITIONS;
 		else if(strcmp(json_string_value(group_name),"vertical_boosters") ==0)groups|=TRACK_GROUP_VERTICAL_BOOSTERS;
+		else if (strcmp(json_string_value(group_name),"rotation_control_toggles") == 0)groups |= TRACK_GROUP_ROTATION_CONTROL_TOGGLE;
 		else
 		{
 			printf("Error: Unrecognized section group \"%s\"\n",json_string_value(group_name));
@@ -345,7 +346,8 @@ int load_track_type(track_type_t* track_type,json_t* json)
 	    "brake",
 	    "block_brake",
 	    "booster",
-	    "magnetic_brake",
+		"rotation_control_toggle",
+		"magnetic_brake",
 	    "support_steep_to_vertical",
 	    "support_vertical_to_steep",
 	    "support_vertical",
