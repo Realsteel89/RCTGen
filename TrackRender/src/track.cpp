@@ -385,7 +385,10 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 				mat.entries[8]*=-1;
 			}
 
-			if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BRAKE || (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_MAGNETIC_BRAKE || (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE || (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BOOSTER)
+			if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BRAKE ||
+				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_MAGNETIC_BRAKE ||
+				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE ||
+				(track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BOOSTER)
 			{
 			float special_length=track_type->brake_length;
 				if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE)special_length=TILE_SIZE;
@@ -853,6 +856,15 @@ uint64_t groups=0;
 	sprintf(output_path,"%.255slarge_turn_right_to_diag%s",output_dir,suffix);
 	write_track_section(context,&(track_list.large_turn_right_to_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
 	}
+
+
+	//very_small_Turns
+	if (groups & TRACK_GROUP_VERY_SMALL_TURNS)
+	{
+		sprintf(output_path, "%.255svery_small_turn_left%s", output_dir, suffix);
+		write_track_section(context, &(track_list.very_small_turn_left), track_type, base_dir, output_path, sprites, subtype, NULL);
+	}
+
 
 	//Diagonals
 	if(groups&TRACK_GROUP_DIAGONALS)
