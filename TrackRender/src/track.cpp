@@ -186,9 +186,7 @@ int get_special_index(int flags)
 		break;
 	case TRACK_SPECIAL_BLOCK_BRAKE_CLOSED:
 		return MODEL_SPECIAL_BLOCK_BRAKE_CLOSED;
-		break;
-
-		break;
+		break;				
 	case TRACK_SPECIAL_MAGNETIC_BRAKE:
 		return MODEL_SPECIAL_MAGNETIC_BRAKE;
 		break;
@@ -409,7 +407,8 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 			float special_length=track_type->brake_length;
 				if((track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_CLASSIC ||
 			       (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_OPEN ||
-				   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_CLOSED)special_length=TILE_SIZE;
+				   (track_section->flags&TRACK_SPECIAL_MASK) == TRACK_SPECIAL_BLOCK_BRAKE_CLOSED)
+					special_length=TILE_SIZE;
 
 			int num_special_meshes=(int)floor(0.5+track_section->length/special_length);
 			float special_scale=track_section->length/(num_special_meshes*special_length);
@@ -849,6 +848,7 @@ uint64_t groups=0;
 	write_track_section(context,&(track_list.magnetic_brake),track_type,base_dir,output_path,sprites,subtype,NULL);
 	}
 
+	// Booster
 
 	if(groups&TRACK_GROUP_BOOSTERS)
 	{
@@ -863,9 +863,6 @@ uint64_t groups=0;
 		sprintf(output_path, "%.255srotation_control_toggle%s", output_dir, suffix);
 		write_track_section(context, &(track_list.rotation_control_toggle), track_type, base_dir, output_path, sprites, subtype, NULL);
 	}
-
-
-
 
 
 	//Launched lift
