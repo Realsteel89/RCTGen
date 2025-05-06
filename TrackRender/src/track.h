@@ -129,6 +129,7 @@ enum track_groups
 	TRACK_GROUP_DIAGONAL_VERTICALS=0x400000000,
 	TRACK_GROUP_BANKED_S_BENDS=0x800000000,
 	TRACK_GROUP_BLOCK_BRAKES=0x1000000000,
+	TRACK_GROUP_DIVE_LOOPS=0x2000000000,
 };
 
 enum models
@@ -158,6 +159,21 @@ enum models
 	MODEL_SPECIAL_LARGE_ZERO_G_ROLL
 };
 
+enum offsets
+{
+OFFSET_FLAT=0,
+OFFSET_GENTLE=1,
+OFFSET_STEEP=2,
+OFFSET_BANK=3,
+OFFSET_GENTLE_BANK=4,
+OFFSET_INVERTED=5,
+OFFSET_DIAGONAL=6,
+OFFSET_DIAGONAL_BANK=7,
+OFFSET_DIAGONAL_GENTLE=8,
+OFFSET_DIAGONAL_STEEP=9
+};
+
+
 #define NUM_MODELS 23
 #define SUPPORT_SPECIAL_START SUPPORT_SPECIAL_STEEP_TO_VERTICAL
 
@@ -181,6 +197,7 @@ typedef struct
 	float pivot;
 	float z_offset;
 	float support_spacing;
+	float offset_table[88];
 }track_type_t;
 
 typedef struct
@@ -317,6 +334,8 @@ typedef struct
 	track_section_t large_half_loop_right;
 	track_section_t flat_to_steep_up;
 	track_section_t steep_to_flat_up;
+	track_section_t flat_to_steep_up_diag;
+	track_section_t steep_to_flat_up_diag;
 	track_section_t small_flat_to_steep_up;
 	track_section_t small_steep_to_flat_up;
 	track_section_t small_flat_to_steep_up_diag;
@@ -330,6 +349,10 @@ typedef struct
 	track_section_t zero_g_roll_right;
 	track_section_t large_zero_g_roll_left;
 	track_section_t large_zero_g_roll_right;
+	track_section_t dive_loop_45_left;
+	track_section_t dive_loop_45_right;
+	track_section_t dive_loop_90_left;
+	track_section_t dive_loop_90_right;
 	track_section_t small_turn_left_bank_to_gentle_up;
 	track_section_t small_turn_right_bank_to_gentle_up;
 	track_section_t launched_lift;
@@ -357,8 +380,6 @@ typedef struct
 	track_section_t large_turn_left_bank_to_orthogonal_gentle_up;
 	track_section_t large_turn_right_bank_to_orthogonal_gentle_up;
 
-	track_section_t flat_to_steep_up_diag;
-	track_section_t steep_to_flat_up_diag;
 	track_section_t steep_to_vertical_up_diag;
 	track_section_t vertical_to_steep_up_diag;
 	track_section_t vertical_diag;

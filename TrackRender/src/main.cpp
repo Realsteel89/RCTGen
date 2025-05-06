@@ -9,10 +9,10 @@
 
 #include "track.h"
 
-context_t get_context(light_t* lights,uint32_t num_lights)
+context_t get_context(light_t* lights,uint32_t num_lights,uint32_t dither)
 {
 	context_t context;
-	context_init(&context,lights,num_lights,palette_rct2(),TILE_SIZE);
+	context_init(&context,lights,num_lights,dither,palette_rct2(),TILE_SIZE);
 	//context.palette.colors[0].r=0;
 	//context.palette.colors[0].g=0;
 	//context.palette.colors[0].b=0;
@@ -84,6 +84,7 @@ int load_groups(json_t* json,uint64_t* out)
 		else if(strcmp(json_string_value(group_name),"medium_half_loops") ==0)groups|=TRACK_GROUP_MEDIUM_HALF_LOOPS;
 		else if(strcmp(json_string_value(group_name),"large_half_loops") ==0)groups|=TRACK_GROUP_LARGE_HALF_LOOPS;
 		else if(strcmp(json_string_value(group_name),"zero_g_rolls") ==0)groups|=TRACK_GROUP_ZERO_G_ROLLS;
+		else if(strcmp(json_string_value(group_name),"dive_loops") ==0)groups|=TRACK_GROUP_DIVE_LOOPS;
 		else if(strcmp(json_string_value(group_name),"boosters") ==0)groups|=TRACK_GROUP_BOOSTERS;
 		else if(strcmp(json_string_value(group_name),"launched_lifts") ==0)groups|=TRACK_GROUP_LAUNCHED_LIFTS;
 		else if(strcmp(json_string_value(group_name),"turn_bank_transitions") ==0)groups|=TRACK_GROUP_TURN_BANK_TRANSITIONS;
@@ -96,6 +97,37 @@ int load_groups(json_t* json,uint64_t* out)
 	}
 	*out=groups;
 	return 0;
+}
+
+int load_offsets(json_t* json,float* offsets)
+{
+const char* row_names[10]={"flat","gentle","steep","flat_banked","gentle_banked","inverted","diagonal","diagonal_banked","diagonal_gentle","diagonal_steep"};
+
+//Zero offset array
+memset(offsets,0,88*sizeof(float));
+
+//Load offsets
+	for(int i=0;i<10;i++)
+	{
+	json_t* row=json_object_get(json,row_names[i]);
+		if(row == NULL)continue;
+		if(!json_is_array(row) || json_array_size(row) != 8)
+		{
+		printf("Property \"%s\" is not an array of length 8\n",row_names[i]);
+		return 1;
+		}
+		for(int j=0;j<8;j++)
+		{
+		json_t* value=json_array_get(row,j);
+			if(!json_is_number(value))
+			{
+			printf("Array \"%s\" contains non numeric value\n",row_names[i]);
+			return 1;
+			}
+		offsets[8*i+j]=json_number_value(value);
+		}
+	}
+return 0;
 }
 
 int load_track_type(track_type_t* track_type,json_t* json)
@@ -240,6 +272,18 @@ int load_track_type(track_type_t* track_type,json_t* json)
 		}
 	}
 	else track_type->pivot=0;
+
+	//Load offset table
+	if(track_type->flags & TRACK_SPECIAL_OFFSETS)
+	{
+	json_t* offsets=json_object_get(json,"offsets");
+		if(offsets ==NULL || !json_is_object(offsets))
+		{
+		printf("Error: Property \"offsets\" not found or is not an object\n");
+		return 1;
+		}
+		if(load_offsets(offsets,track_type->offset_table))return 1;
+	}
 
 	//Load models
 	json_t* models=json_object_get(json,"models");
@@ -506,6 +550,19 @@ int main(int argc,char** argv)
 		if(load_lights(lights,&num_lights,light_array))return 1;
 	}
 
+	int dither=1;
+	json_t* dither_json=json_object_get(track,"dither");
+	if(dither_json !=NULL)
+	{
+		if(!json_is_true(dither_json) && !json_is_false(dither_json))
+		{
+			printf("Error: Property \"dither\" is not a boolean\n");
+			return 1;
+		}
+	dither=json_is_true(dither_json);
+	}
+
+
 	track_type_t track_type;
 	if(load_track_type(&track_type,track))
 	{
@@ -522,7 +579,7 @@ int main(int argc,char** argv)
 		return 1;
 	}
 
-	context_t context=get_context(lights,num_lights);
+	context_t context=get_context(lights,num_lights,dither);
 
 	write_track_type(&context,&track_type,sprites,base_dir,sprite_dir);
 

@@ -26,6 +26,7 @@ typedef struct
 	float z_offset;
 	float length;
 	int flags;
+	float track_length;
 }track_transform_args_t;
 
 track_point_t get_track_point(track_point_t (*curve)(float distance),int flags,float z_offset,float length,float u)
@@ -70,7 +71,7 @@ track_point_t only_yaw(track_point_t input)
 	return output;
 }
 
-vertex_t track_transform(vector3_t vertex,vector3_t normal,void* data)
+vertex_t track_transform(vector3_t vertex,vector3_t normal,const bool flat_shaded,void* data)
 {
 	track_transform_args_t args=*((track_transform_args_t*)data);
 
@@ -80,11 +81,20 @@ vertex_t track_transform(vector3_t vertex,vector3_t normal,void* data)
 
 	vertex_t out;
 	out.vertex=change_coordinates(vector3_add(track_point.position,vector3_add(vector3_mult(track_point.normal,vertex.y),vector3_mult(track_point.binormal,vertex.x))));
-	out.normal=change_coordinates(vector3_add(vector3_mult(track_point.tangent,normal.z),vector3_add(vector3_mult(track_point.normal,normal.y),vector3_mult(track_point.binormal,normal.x))));
+
+	if (flat_shaded)
+	{
+		track_point_t central_track_point = get_track_point(args.track_curve, args.flags, args.z_offset, args.length, args.offset + (args.track_length / 2));
+		out.normal = change_coordinates(vector3_add(vector3_mult(central_track_point.tangent, normal.z), vector3_add(vector3_mult(central_track_point.normal, normal.y), vector3_mult(central_track_point.binormal, normal.x))));
+	}
+	else
+	{
+		out.normal = change_coordinates(vector3_add(vector3_mult(track_point.tangent, normal.z), vector3_add(vector3_mult(track_point.normal, normal.y), vector3_mult(track_point.binormal, normal.x))));
+	}
 	return out;
 }
 
-vertex_t base_transform(vector3_t vertex,vector3_t normal,void* data)
+vertex_t base_transform(vector3_t vertex,vector3_t normal,const bool flat_shaded,void* data)
 {
 	track_transform_args_t args=*((track_transform_args_t*)data);
 
@@ -242,6 +252,7 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 	args.track_curve=track_section->curve;
 	args.flags=track_section->flags;
 	args.length=track_section->length;
+	args.track_length = track_type->length;
 	if(track_mask)context_add_model_transformed(context,&(track_type->mask),track_transform,&args,0);//);
 	else if(!extrude_behind)context_add_model_transformed(context,mesh,track_transform,&args,MESH_GHOST);
 	args.offset=track_section->length;
@@ -294,6 +305,7 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 			args.track_curve=track_section->curve;
 			args.flags=track_section->flags;
 			args.length=track_section->length;
+			args.track_length = track_type->length;
 			if((!(i&1))&&(i !=0||start_tie)&&(i !=2*num_meshes||end_tie))
 			{
 				track_point_t track_point=get_track_point(track_section->curve,track_section->flags,z_offset,args.length,args.offset+track_type->tie_length/2);
@@ -344,6 +356,7 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 			args.track_curve=track_section->curve;
 			args.flags=track_section->flags;
 			args.length=track_section->length;
+			args.track_length = track_type->length;
 
 			int alt_available=track_type->models_loaded&(1<<MODEL_TRACK_ALT);
 			int use_alt=alt_available&&(i&1);
@@ -401,6 +414,7 @@ void render_track_section(context_t* context,track_section_t* track_section,trac
 				args.track_curve=track_section->curve;
 				args.flags=track_section->flags;
 				args.length=track_section->length;
+				args.track_length = track_type->length;
 
 				context_add_model_transformed(context,&(track_type->models[index]),track_transform,&args,track_mask);
 				}
@@ -475,33 +489,37 @@ int offset_table_index_with_rot(track_point_t track,int rot)
 	//Get bank angle
 	int banked=fabs(fabs(asin(sqrt(track.normal.x*track.normal.x+track.normal.z*track.normal.z)))-0.25*M_PI)<0.1;
 	int right=(banked&&track.binormal.y<0) ? 0x10 : 0;
-	//printf("%f %f %f\n",track.tangent.x,track.tangent.y,track.tangent.z);
 	//Flat
 	if(compare_vec(track.tangent,vector3(0,0,TILE_SIZE),rot))
 	{
 		//Inverted
-		if(track.normal.y<-0.9)return 5;
+		if(track.normal.y<-0.9)return OFFSET_INVERTED;
 		//Banked
-		else if(banked)return right|3;
+		else if(banked)return right|OFFSET_BANK;
 		//Unbanked
-		else return 0;
+		else return OFFSET_FLAT;
 	}
 	//Gentle
 	else if(compare_vec(track.tangent,vector3(0,2*CLEARANCE_HEIGHT,TILE_SIZE),rot))
 	{
-		if(banked)return right|4;
-		else return 1;
+		if(banked)return right|OFFSET_GENTLE_BANK;
+		else return OFFSET_GENTLE;
 	}
 	//Steep
-	else if(compare_vec(track.tangent,vector3(0,8*CLEARANCE_HEIGHT,TILE_SIZE),rot))return 2;
+	else if(compare_vec(track.tangent,vector3(0,8*CLEARANCE_HEIGHT,TILE_SIZE),rot))return OFFSET_STEEP;
 	//Diagonal flat
 	else if(compare_vec(track.tangent,vector3(-TILE_SIZE,0,TILE_SIZE),rot))
 	{
-		if(banked)return right|7;
-		return 6;
+		if(banked)return right|OFFSET_DIAGONAL_BANK;
+		return OFFSET_DIAGONAL;
 	}
 	//Diagonal gentle
-	else if(compare_vec(track.tangent,vector3(-TILE_SIZE,2*CLEARANCE_HEIGHT,TILE_SIZE),rot)&&!banked)return 8;
+	else if(compare_vec(track.tangent,vector3(-TILE_SIZE,2*CLEARANCE_HEIGHT,TILE_SIZE),rot)&&!banked)
+	{
+	return OFFSET_DIAGONAL_GENTLE;
+	}
+	//Diagonal steep
+	else if(compare_vec(track.tangent,vector3(-TILE_SIZE,8*CLEARANCE_HEIGHT,TILE_SIZE),rot))return OFFSET_DIAGONAL_STEEP;//Banked is true even for unbanked track; TODO fix this
 	return 0xFF;
 }
 
@@ -519,6 +537,8 @@ int offset_table_index(track_point_t track)
 	index=offset_table_index_with_rot(track,3);
 	if(index !=0xFF)return 0x20|index;
 	return 0xFF;
+
+return 0xFF;
 }
 
 /*
@@ -528,43 +548,9 @@ y        z
 |_
 */
 
-/*
-float offset_tables[10][8]={
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},//Gentle 1
-    {0,0,0,0,0,0,0,0},//Steep 2
-
-    {1,-1.5,-1,-1.5,1,0,-1,0},//Bank
-    {0,0,0,0,0,0,0,0},//Gentle Bank 4
-
-    {0,0,0,0,0,0,0,0},//Inverted 5
-    {0,0,0,0,0,0,0,0},//Diagonal 6
-
-    {0,0,0,0,0,0,0,0},//Diagonal Bank 7
-
-    {0,0,0,0,0,0,0,0},//Diagonal gentle 8
-    {0,0,0,0,0,0,0,0},//Other
-    };
-*/
-
-//Giga
-/*
-float offset_tables[10][8]={
-    {0,-1,0,-1.5,0,-1,0,-1.5},
-    {0,-1,0,-2,0,-2,0,-1},            //Gentle
-    {1,-0.5,1,-0.5,0.5,-1,1,-0.5},    //Steep
-    {0,-2,-1,-1.5,1,0,-1,0},          //Bank
-    {0.75,-2,-0.75,-2,1,-0.5,0,-0.5}, //Gentle Bank   -0.5,-1    0.5,0
-    {0,0,0,0,0,0,0,0},                //Inverted
-    {0,-1.25,0,-1.25,0,-1.25,0,-1.25},//Diagonal
-    {0,-1.75,-1,-0.25,0,-0.25,-1,-1.5},//Diagonal Bank
-    {0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal gentle
-    {0,0,0,0,0,0,0,0},                //Other
-};
-*/
-
 //Mini
-float offset_tables[10][8]={
+/*
+float offset_tables[11][8]={
     {0,-1.45,0,-1.45,0,-1.45,0,-1.45},
     {0,-1,0,-1.25,0,-1.25,0,-1},            //Gentle
     {1,-0.5,1,-0.5,0.5,-1,1,-0.5},    //Steep
@@ -574,11 +560,10 @@ float offset_tables[10][8]={
     {0,-1.25,0,-1.25,0,-1.25,0,-1.25},//Diagonal
     {0,-1.75,-1,-0.25,0,-0.25,-1,-1.5},//Diagonal Bank
     {0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal gentle
+    {0,-1.5,0,-1.5,0,-1.5,0,-1.5},    //Diagonal steep
     {0,0,0,0,0,0,0,0},                //Other
 };
-
-
-
+*/
 
 //LIM
 /*
@@ -596,7 +581,7 @@ float offset_tables[10][8]={
     };
 */
 
-vector3_t get_offset(int table,int view_angle)
+vector3_t get_offset(int table,int view_angle,float* offset_table)
 {
 	int index=table&0xF;
 	int end_angle=table>>5;
@@ -609,8 +594,8 @@ vector3_t get_offset(int table,int view_angle)
 	if(table ==0xFF)return offset;
 
 	offset.x=0;
-	offset.z=offset_tables[index][2*rotated_view_angle]*TILE_SIZE/32.0;
-	offset.y=offset_tables[index][2*rotated_view_angle+1]*CLEARANCE_HEIGHT/8.0;
+	offset.z=offset_table[8*index+2*rotated_view_angle]*TILE_SIZE/32.0;
+	offset.y=offset_table[8*index+2*rotated_view_angle+1]*CLEARANCE_HEIGHT/8.0;
 
 	//Check if right banked
 	if(right)
@@ -628,17 +613,17 @@ vector3_t get_offset(int table,int view_angle)
 	//Correct for end rotation
 	if(end_angle !=0)offset=matrix_vector(rotate_y(-0.5*M_PI*end_angle),offset);
 
-	//printf("Offset %d %d %.2f\n",index,rotated_view_angle,offset_tables[index][2*rotated_view_angle+1]);
+	//printf("Offset %d Rotation %d x %.2f y %.2f\n",index,rotated_view_angle,offset_table[8*index+2*rotated_view_angle],offset_table[8*index+2*rotated_view_angle+1]);
 	return offset;
 }
 
-void set_offset(int view_angle,track_section_t* track_section)
+void set_offset(int view_angle,track_section_t* track_section,float* offset_table)
 {
 	int start_table=offset_table_index(track_section->curve(0));
 	int end_table=offset_table_index(track_section->curve(track_section->length));
 
-	start_offset=get_offset(start_table,view_angle);
-	end_offset=get_offset(end_table,view_angle);
+	start_offset=get_offset(start_table,view_angle,offset_table);
+	end_offset=get_offset(end_table,view_angle,offset_table);
 }
 
 void render_track_sections(context_t* context,track_section_t* track_section,track_type_t* track_type,int track_mask,int subtype,int views,image_t* sprites)
@@ -649,13 +634,13 @@ int extrude_in_front_odd=(track_section->flags&TRACK_EXIT_45_DEG_LEFT)&&(track_s
 
 	if(track_type->flags&TRACK_SPECIAL_OFFSETS)
 	{
-	set_offset(0,track_section);
+	set_offset(0,track_section,track_type->offset_table);
 		if(views&0x1)render_track_section(context,track_section,track_type,extrude_behind,extrude_in_front_even,track_mask,0x1,sprites,subtype);
-	set_offset(1,track_section);
+	set_offset(1,track_section,track_type->offset_table);
 		if(views&0x2)render_track_section(context,track_section,track_type,0,extrude_in_front_odd,track_mask,0x2,sprites,subtype);
-	set_offset(2,track_section);
+	set_offset(2,track_section,track_type->offset_table);
 		if(views&0x4)render_track_section(context,track_section,track_type,extrude_behind,extrude_in_front_even,track_mask,0x4,sprites,subtype);
-	set_offset(3,track_section);
+	set_offset(3,track_section,track_type->offset_table);
 		if(views&0x8)render_track_section(context,track_section,track_type,0,extrude_in_front_odd,track_mask,0x8,sprites,subtype);
 	return;
 	}
@@ -672,7 +657,7 @@ int extrude_in_front_odd=(track_section->flags&TRACK_EXIT_45_DEG_LEFT)&&(track_s
 		else
 		{
 			if(views&0x5)render_track_section(context,track_section,track_type,extrude_behind,extrude_in_front_even,track_mask,views&0x5,sprites,subtype);
-			if(views&0xA)render_track_section(context,track_section,track_type,extrude_behind,extrude_in_front_odd,track_mask,views&0xA,sprites,subtype);
+			if(views&0xA)render_track_section(context,track_section,track_type,0,extrude_in_front_odd,track_mask,views&0xA,sprites,subtype);
 		}
 	}
 	else
@@ -1181,6 +1166,10 @@ uint64_t groups=0;
 		write_track_section(context,&(track_list.flat_to_steep_up),track_type,base_dir,output_path,sprites,subtype,NULL);
 		sprintf(output_path,"%.255ssteep_to_flat_up%s",output_dir,suffix);
 		write_track_section(context,&(track_list.steep_to_flat_up),track_type,base_dir,output_path,sprites,subtype,NULL);
+		sprintf(output_path,"%.255sflat_to_steep_up_diag%s",output_dir,suffix);
+		write_track_section(context,&(track_list.flat_to_steep_up_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
+		sprintf(output_path,"%.255ssteep_to_flat_up_diag%s",output_dir,suffix);
+		write_track_section(context,&(track_list.steep_to_flat_up_diag),track_type,base_dir,output_path,sprites,subtype,NULL);
 	}
 	if(groups&TRACK_GROUP_QUARTER_LOOPS)
 	{
@@ -1233,6 +1222,18 @@ uint64_t groups=0;
 		write_track_section(context,&(track_list.large_zero_g_roll_left),track_type,base_dir,output_path,sprites,subtype,NULL);
 		sprintf(output_path,"%.255slarge_zero_g_roll_right%s",output_dir,suffix);
 		write_track_section(context,&(track_list.large_zero_g_roll_right),track_type,base_dir,output_path,sprites,subtype,NULL);
+	}
+	if(groups&TRACK_GROUP_DIVE_LOOPS)
+	{
+		sprintf(output_path,"%.255sdive_loop_45_left%s",output_dir,suffix);
+		write_track_section(context,&(track_list.dive_loop_45_left),track_type,base_dir,output_path,sprites,subtype,NULL);
+		sprintf(output_path,"%.255sdive_loop_45_right%s",output_dir,suffix);
+		write_track_section(context,&(track_list.dive_loop_45_right),track_type,base_dir,output_path,sprites,subtype,NULL);
+/*
+		sprintf(output_path,"%.255sdive_loop_90_left%s",output_dir,suffix);
+		write_track_section(context,&(track_list.dive_loop_90_left),track_type,base_dir,output_path,sprites,subtype,NULL);
+		sprintf(output_path,"%.255sdive_loop_90_right%s",output_dir,suffix);
+		write_track_section(context,&(track_list.dive_loop_90_right),track_type,base_dir,output_path,sprites,subtype,NULL);*/
 	}
 
 	if(groups&TRACK_GROUP_SMALL_SLOPE_TRANSITIONS)
