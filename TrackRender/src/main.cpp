@@ -54,12 +54,12 @@ int load_groups(json_t* json,uint64_t* out)
 		}
 		if(strcmp(json_string_value(group_name),"flat") ==0)groups|=TRACK_GROUP_FLAT;
 		else if(strcmp(json_string_value(group_name),"brakes") ==0)groups|=TRACK_GROUP_BRAKES;
-		else if(strcmp(json_string_value(group_name),"block_brakes_classic") ==0)groups|=TRACK_GROUP_BLOCK_BRAKES_CLASSIC;
-		else if (strcmp(json_string_value(group_name),"block_brakes_open") == 0)groups |= TRACK_GROUP_BLOCK_BRAKES_OPEN;
-		else if (strcmp(json_string_value(group_name),"block_brakes_closed") == 0)groups |= TRACK_GROUP_BLOCK_BRAKES_CLOSED;
+		//else if(strcmp(json_string_value(group_name),"block_brakes_classic") ==0)groups|=TRACK_GROUP_BLOCK_BRAKES_CLASSIC;
+		//else if (strcmp(json_string_value(group_name),"block_brakes_open") == 0)groups |= TRACK_GROUP_BLOCK_BRAKES_OPEN;
+		//else if (strcmp(json_string_value(group_name),"block_brakes_closed") == 0)groups |= TRACK_GROUP_BLOCK_BRAKES_CLOSED;
 		else if(strcmp(json_string_value(group_name),"diagonal_brakes") ==0)groups|=TRACK_GROUP_DIAGONAL_BRAKES;
-		else if (strcmp(json_string_value(group_name),"diagonal_block_brakes_open") == 0)groups |= TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_OPEN;
-		else if (strcmp(json_string_value(group_name),"diagonal_block_brakes_closed") == 0)groups |= TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_CLOSED;
+		//else if (strcmp(json_string_value(group_name),"diagonal_block_brakes_open") == 0)groups |= TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_OPEN;
+		//else if (strcmp(json_string_value(group_name),"diagonal_block_brakes_closed") == 0)groups |= TRACK_GROUP_DIAGONAL_BLOCK_BRAKES_CLOSED;
 		else if(strcmp(json_string_value(group_name),"sloped_brakes") ==0)groups|=TRACK_GROUP_SLOPED_BRAKES;
 		else if(strcmp(json_string_value(group_name),"magnetic_brakes") ==0)groups|=TRACK_GROUP_MAGNETIC_BRAKES;
 		else if(strcmp(json_string_value(group_name),"turns") ==0)groups|=TRACK_GROUP_TURNS;
@@ -345,10 +345,11 @@ int load_track_type(track_type_t* track_type,json_t* json,int preloaded)
 	    "support_bank",
 	    "support_base",
 	    "brake",
-	    "block_brake_classic",
-		"block_brake_open",
-		"block_brake_closed",
+	    //"block_brake_classic",
+		//"block_brake_open",
+		//"block_brake_closed",
 	    "booster",
+		"block_brake",
 	    "magnetic_brake",
 	    "support_steep_to_vertical",
 	    "support_vertical_to_steep",
@@ -478,138 +479,160 @@ mask_t flat_to_steep_diag_masks[]={
 
 view_t diag_iews[4]={{0,3,flat_to_steep_diag_masks+0},{VIEW_NEEDS_TRACK_MASK,3,flat_to_steep_diag_masks+3},{0,3,flat_to_steep_diag_masks+6},{0,3,flat_to_steep_diag_masks+9}};
 
-int main(int argc,char** argv)
+bool write_masks = false;
+const char* json_file = NULL;
+
+int main(int argc, char** argv)
 {
-	if(argc !=2)
+	// Argumente auswerten
+	for (int i = 1; i < argc; i++)
 	{
-		printf("Usage: TrackRender <file>\n");
+		if (strcmp(argv[i], "--write-masks") == 0)
+			write_masks = true;
+		else
+			json_file = argv[i];
+	}
+
+	if (json_file == NULL)
+	{
+		printf("Usage: TrackRender <file> [--write-masks]\n");
 		return 1;
 	}
 
-json_error_t error;
-json_t* json=json_load_file(argv[1],0,&error);
-	if(json ==NULL)
+	// JSON laden
+	json_error_t error;
+	json_t* json = json_load_file(json_file, 0, &error);
+	if (json == NULL)
 	{
-		printf("Error: %s at line %d column %d\n",error.text,error.line,error.column);
+		printf("Error: %s at line %d column %d\n", error.text, error.line, error.column);
 		return 1;
 	}
 
-const char* base_dir=NULL;
-json_t* json_base_dir=json_object_get(json,"base_directory");
-	if(json_base_dir !=NULL&&json_is_string(json_base_dir))base_dir=json_string_value(json_base_dir);
+	// Verzeichnisse und Dateien auslesen
+	const char* base_dir = NULL;
+	json_t* json_base_dir = json_object_get(json, "base_directory");
+	if (json_base_dir != NULL && json_is_string(json_base_dir)) base_dir = json_string_value(json_base_dir);
 	else printf("Error: No property \"base_directory\" found\n");
 
-const char* sprite_dir=NULL;
-json_t* json_sprite_dir=json_object_get(json,"sprite_directory");
-	if(json_sprite_dir !=NULL&&json_is_string(json_sprite_dir))sprite_dir=json_string_value(json_sprite_dir);
+	const char* sprite_dir = NULL;
+	json_t* json_sprite_dir = json_object_get(json, "sprite_directory");
+	if (json_sprite_dir != NULL && json_is_string(json_sprite_dir)) sprite_dir = json_string_value(json_sprite_dir);
 	else printf("Error: No property \"sprite_directory\" found\n");
 
-const char* spritefile_in=NULL;
-json_t* json_spritefile_in=json_object_get(json,"spritefile_in");
-	if(json_spritefile_in !=NULL&&json_is_string(json_spritefile_in))spritefile_in=json_string_value(json_spritefile_in);
+	const char* spritefile_in = NULL;
+	json_t* json_spritefile_in = json_object_get(json, "spritefile_in");
+	if (json_spritefile_in != NULL && json_is_string(json_spritefile_in)) spritefile_in = json_string_value(json_spritefile_in);
 	else printf("Error: No property \"spritefile_in\" found\n");
 
-const char* spritefile_out=NULL;
-json_t* json_spritefile_out=json_object_get(json,"spritefile_out");
-	if(json_spritefile_out !=NULL&&json_is_string(json_spritefile_out))spritefile_out=json_string_value(json_spritefile_out);
+	const char* spritefile_out = NULL;
+	json_t* json_spritefile_out = json_object_get(json, "spritefile_out");
+	if (json_spritefile_out != NULL && json_is_string(json_spritefile_out)) spritefile_out = json_string_value(json_spritefile_out);
 	else printf("Error: No property \"spritefile_out\" found\n");
 
-int num_lights=9;
-light_t lights[16]={
-    {LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.0,-1.0,0.0)),0.25},
-    {LIGHT_DIFFUSE,0,vector3_normalize(vector3(1.0,0.3,0.0)),0.32},
-    {LIGHT_SPECULAR,0,vector3_normalize(vector3(1,1,-1)),1.0},
-    {LIGHT_DIFFUSE,0,vector3_normalize(vector3(1,0.65,-1)),0.8},
-    {LIGHT_DIFFUSE,0,vector3(0.0,1.0,0.0),0.174},
-    {LIGHT_DIFFUSE,0,vector3_normalize(vector3(-1.0,0.0,0.0)),0.15},
-    {LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.0,1.0,1.0)),0.2},
-    {LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.65,0.816,-0.65000000)),0.25},
-    {LIGHT_DIFFUSE,0,vector3_normalize(vector3(-1.0,0.0,-1.0)),0.25},
-    {0,0,{0,0,0},0},
-    {0,0,{0,0,0},0},
-    {0,0,{0,0,0},0},
-    {0,0,{0,0,0},0},
-    {0,0,{0,0,0},0},
-    {0,0,{0,0,0},0},
-    {0,0,{0,0,0},0}};
+	// Licht und Dither
+	int num_lights = 9;
+	light_t lights[16] = {
+		{LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.0,-1.0,0.0)),0.25},
+		{LIGHT_DIFFUSE,0,vector3_normalize(vector3(1.0,0.3,0.0)),0.32},
+		{LIGHT_SPECULAR,0,vector3_normalize(vector3(1,1,-1)),1.0},
+		{LIGHT_DIFFUSE,0,vector3_normalize(vector3(1,0.65,-1)),0.8},
+		{LIGHT_DIFFUSE,0,vector3(0.0,1.0,0.0),0.174},
+		{LIGHT_DIFFUSE,0,vector3_normalize(vector3(-1.0,0.0,0.0)),0.15},
+		{LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.0,1.0,1.0)),0.2},
+		{LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.65,0.816,-0.65)),0.25},
+		{LIGHT_DIFFUSE,0,vector3_normalize(vector3(-1.0,0.0,-1.0)),0.25},
+	};
 
-json_t* light_array=json_object_get(json,"lights");
-	if(light_array !=NULL)
+	json_t* light_array = json_object_get(json, "lights");
+	if (light_array != NULL)
 	{
-		if(!json_is_array(light_array))
+		if (!json_is_array(light_array))
 		{
-		printf("Error: Property \"lights\" is not an array\n");
-		return 1;
+			printf("Error: Property \"lights\" is not an array\n");
+			return 1;
 		}
-		if(load_lights(lights,&num_lights,light_array))return 1;
+		if (load_lights(lights, &num_lights, light_array)) return 1;
 	}
 
-int dither=1;
-json_t* dither_json=json_object_get(json,"dither");
-	if(dither_json !=NULL)
+	int dither = 1;
+	json_t* dither_json = json_object_get(json, "dither");
+	if (dither_json != NULL)
 	{
-		if(!json_is_true(dither_json) && !json_is_false(dither_json))
+		if (!json_is_true(dither_json) && !json_is_false(dither_json))
 		{
-		printf("Error: Property \"dither\" is not a boolean\n");
-		return 1;
+			printf("Error: Property \"dither\" is not a boolean\n");
+			return 1;
 		}
-	dither=json_is_true(dither_json);
+		dither = json_is_true(dither_json);
 	}
 
-json_t* tracks_json=json_object_get(json,"tracks");
-	if(tracks_json ==NULL || !json_is_array(tracks_json))
+	json_t* tracks_json = json_object_get(json, "tracks");
+	if (tracks_json == NULL || !json_is_array(tracks_json))
 	{
-	printf("Error: Property \"tracks\" not found or is not an array\n");
-	return 1;
+		printf("Error: Property \"tracks\" not found or is not an array\n");
+		return 1;
 	}
 
-//Load offset table
-float offset_table[88];
-json_t* offsets=json_object_get(json,"offsets");
-	if(offsets!=NULL)
+	// Offset-Tabelle laden
+	float offset_table[88];
+	json_t* offsets = json_object_get(json, "offsets");
+	if (offsets != NULL)
 	{
-		if(!json_is_object(offsets))
+		if (!json_is_object(offsets))
 		{
-		printf("Error: Property \"offsets\" is not an object\n");
-		return 1;
+			printf("Error: Property \"offsets\" is not an object\n");
+			return 1;
 		}
-		if(load_offsets(offsets,offset_table))return 1;
+		if (load_offsets(offsets, offset_table)) return 1;
 	}
-	else memset(offset_table,0,88*sizeof(float));
+	else memset(offset_table, 0, 88 * sizeof(float));
 
-//Load spritefile
-char full_path[256];
-snprintf(full_path,256,"%s%s",base_dir,spritefile_in);
-json_t* sprites=json_load_file(full_path,0,&error);
-	if(sprites ==NULL)
+	// Spritedatei laden
+	char full_path[256];
+	snprintf(full_path, 256, "%s%s", base_dir, spritefile_in);
+	json_t* sprites = json_load_file(full_path, 0, &error);
+	if (sprites == NULL)
 	{
-	printf("Error: %s in file %s line %d column %d\n",error.text,error.source,error.line,error.column);
-	return 1;
+		printf("Error: %s in file %s line %d column %d\n", error.text, error.source, error.line, error.column);
+		return 1;
 	}
 
-//Initialize rendering context
-context_t context=get_context(lights,num_lights,dither);
+	// Render-Kontext vorbereiten
+	context_t context = get_context(lights, num_lights, dither);
 
-//Load and render tracks
-track_type_t track_type;
-	for(int i=0;i<json_array_size(tracks_json);i++)
+	// Tracks rendern oder Masken schreiben
+	track_type_t track_type;
+	for (int i = 0; i < json_array_size(tracks_json); i++)
 	{
-	json_t* track=json_array_get(tracks_json,i);
-		if(json_is_object(track)&&load_track_type(&track_type,track,i!=0))
+		json_t* track = json_array_get(tracks_json, i);
+		if (json_is_object(track) && load_track_type(&track_type, track, i != 0))
 		{
-		printf("Error loading track\n");
-		json_decref(sprites);
-		context_destroy(&context);
-		return 1;
+			printf("Error loading track\n");
+			json_decref(sprites);
+			context_destroy(&context);
+			return 1;
 		}
-	write_track_type(&context,&track_type,sprites,offset_table,base_dir,sprite_dir);
+
+		if (write_masks)
+		{
+			// Nur Masken exportieren
+			dump_masks("track", track_type.masks);
+		}
+		else
+		{
+			// Nur Sprites rendern
+			write_track_type(&context, &track_type, sprites, offset_table, base_dir, sprite_dir);
+		}
 	}
 
+	// Nur speichern, wenn keine Masken exportiert wurden
+	if (!write_masks)
+	{
+		snprintf(full_path, 256, "%s%s", base_dir, spritefile_out);
+		json_dump_file(sprites, full_path, JSON_INDENT(4));
+	}
 
-
-snprintf(full_path,256,"%s%s",base_dir,spritefile_out);
-json_dump_file(sprites,full_path,JSON_INDENT(4));
-context_destroy(&context);
-
-return 0;
+	context_destroy(&context);
+	return 0;
 }
+
